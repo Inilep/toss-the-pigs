@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: toss-the-pigs
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
