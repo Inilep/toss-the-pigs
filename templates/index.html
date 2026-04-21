@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toss the Pigs Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            text-align: center;
+            color: #fff;
+        }
+
+        h2 {
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .card {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 14px rgba(255, 255, 255, 0.05);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .player-input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: block;
+            color: #fff;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #000;
+            color: #fff;
+        }
+
+        input::placeholder {
+            color: #aaa;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            background-color: #fff;
+            color: #000;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #ddd;
+        }
+
+        .secondary-button {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+        }
+
+        .secondary-button:hover {
+            background-color: #444;
+        }
+
+        .player-list {
+            padding-left: 18px;
+            margin: 0;
+        }
+
+        .player-list li {
+            margin-bottom: 6px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            min-width: 500px;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #000;
+            color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #111;
+            font-weight: bold;
+        }
+
+        .totals {
+            font-weight: bold;
+            background-color: #111;
+        }
+
+        .leader {
+            background-color: #1f4d1f;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .muted {
+            color: #bbb;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 700px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .form-row input,
+            .form-row button {
+                width: 100%;
+            }
+
+            .player-input-row {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.95rem;
+            }
+
+            .card {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Toss the Pigs Tracker</h1>
+
+        <div class="card">
+            <h2>Add Players</h2>
+            <form method="post">
+                <input type="hidden" name="action" value="add_player">
+
+                <div class="form-row">
+                    <input type="text" name="name" placeholder="Player name" required>
+                    <input type="text" name="initials" placeholder="Initials" required>
+                    <button type="submit">Add Player</button>
+                </div>
+            </form>
+        </div>
+
+        {% if players %}
+            <div class="card">
+                <h2>Players</h2>
+                <p class="muted">{{ players|length }} player(s) in this game</p>
+                <ul class="player-list">
+                    {% for initials, name in players.items() %}
+                        <li>{{ name }} ({{ initials }})</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Enter Round {{ history|length + 1 }}</h2>
+                <form method="post">
+                    <input type="hidden" name="action" value="submit_round">
+
+                    {% for initials, name in players.items() %}
+                        <div class="player-input-row">
+                            <label for="turn_{{ initials }}">{{ name }} ({{ initials }})</label>
+                            <input
+                                id="turn_{{ initials }}"
+                                type="text"
+                                name="turn_{{ initials }}"
+                                placeholder="score, 0, or reset"
+                                required
+                            >
+                        </div>
+                    {% endfor %}
+
+                    <div class="button-row">
+                        <button type="submit">Submit Round</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="button-row">
+                    <form method="post">
+                        <input type="hidden" name="action" value="new_game">
+                        <button type="submit" class="secondary-button">Start New Game</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Score Table</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <tr>
+                            <th>Round</th>
+                            {% for initials, name in players.items() %}
+                                <th>{{ name }} ({{ initials }})</th>
+                            {% endfor %}
+                        </tr>
+
+                        {% for row in history %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                {% for initials in players.keys() %}
+                                    <td>{{ row[initials] }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+
+                        {% set max_score = scores.values() | max %}
+                        <tr class="totals">
+                            <td>TOTAL</td>
+                            {% for initials in players.keys() %}
+                                <td class="{% if scores[initials] == max_score and max_score > 0 %}leader{% endif %}">
+                                    {{ scores[initials] }}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
